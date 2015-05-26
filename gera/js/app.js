@@ -48,7 +48,7 @@ var prepareMeshObject = function() {
 
     var promise = new Gera.Promise();
 
-    getJsonModel( 'test.data/json/sword.json' )
+    getJsonModel( 'data/json/sword.json' )
     .then( function( jsonModel ) {
         if ( typeof jsonModel !== 'object' )
             throw new Error( 'Can\'t prepare the mesh object, because the given JSON-model object is NOT a type of `object`.' );
@@ -62,7 +62,7 @@ var prepareMeshObject = function() {
         fetchedObjects.jsonModel = parsedJsonModel;
         fetchedObjects.texture = new Gera.Texture({
             type: Gera.Texture.Type.Image,
-            path: 'test.data/textures/sword.2.jpg'
+            path: 'data/textures/sword.2.jpg'
         });
 
         promise.resolve( fetchedObjects );
