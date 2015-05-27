@@ -4020,10 +4020,10 @@
             if ( !( mesh instanceof Gera.Mesh ) )
                 throw new Error( 'Can\'t update the wireframe property of the given mesh object in custom draw mode, because the given mesh object is NOT an instance of `Gera.Mesh`.' );
     
-            if ( typeof drawModeValue !== 'number' )
+            if ( typeof drawMode !== 'number' )
                 throw new Error( 'Can\'t update the wireframe property of the given mesh object in custom draw mode, because the fetched draw mode value from mesh is NOT a type of `number`.' );
     
-            switch ( drawModeValue ) {
+            switch ( drawMode ) {
                 case Gera.Renderer.DrawMode.Points:
                 case Gera.Renderer.DrawMode.Lines:
                 case Gera.Renderer.DrawMode.LineStrip:
