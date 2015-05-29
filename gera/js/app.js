@@ -1,3 +1,5 @@
+'use strict';
+
 var getJsonModel = function( jsonModelPath ) {
     if ( typeof jsonModelPath !== 'string' )
         throw new Error( 'Can\'t get the JSON 3D-model, because the given `jsonModelPath` argument is NOT a type of `string`.' );
@@ -17,6 +19,26 @@ var getJsonModel = function( jsonModelPath ) {
     });
 
     return promise;
+};
+
+var generateRandomInteger = function( minimum, maximum ) {
+    if ( typeof minimum !== 'number' )
+        throw new Error( 'Can\'t generate the random integer, because the given minimum value is NOT a type of `number`.' );
+
+    if ( typeof maximum !== 'number' )
+        throw new Error( 'Can\'t generate the random integer, because the given maximum value is NOT a type of `number`.' );
+
+    return Math.floor( Math.random() * ( maximum - minimum + 1 ) ) + minimum;
+};
+
+var generateRandomArbitrary = function( minimum, maximum ) {
+    if ( typeof minimum !== 'number' )
+        throw new Error( 'Can\'t generate the random arbitrary, because the given minimum value is NOT a type of `number`.' );
+
+    if ( typeof maximum !== 'number' )
+        throw new Error( 'Can\'t generate the random arbitrary, because the given maximum value is NOT a type of `number`.' );
+
+    return Math.random() * ( maximum - minimum ) + minimum;
 };
 
 var getWavefrontObjectModel = function( objectModelPath ) {
@@ -123,15 +145,19 @@ window.onload = function( sender ) {
                     indices: object3d.jsonModel.indices,
                     uvCoordinates: object3d.jsonModel.uvCoordinates
                 }),
-                material: new Gera.Material( object3d.texture ),
-                //drawMode: Gera.Renderer.DrawMode.Triangles
+                material: new Gera.Material( object3d.texture )
             });
 
             mesh.position.x = -23 + 5 * i;
             mesh.position.z = -5;
-            mesh.rotate( new Gera.Vector3( { x: 0, y: 0, z: 1 } ), 90 );
-            // mesh.rotate( new Gera.Vector3( { x: 1, y: 0, z: 1 } ), -90 );
-            mesh.transparency.set( Math.random() );
+            mesh.rotation = new Gera.Rotation({
+                vector: new Gera.Vector3({
+                    x: generateRandomInteger( -1, 1 ),
+                    y: 0,
+                    z: generateRandomInteger( -1, 1 )
+                }),
+                angle: 1.5
+            });
             scene.add( mesh );
         }
     });
@@ -154,8 +180,6 @@ window.onload = function( sender ) {
         vector: new Gera.Vector3( { x: 0, y: 1, z: 0 } ),
         angle: 1.5
     });
-    // cubeMesh.rotate( new Gera.Vector3( { x: 0, y: 1, z: 0 } ), 45 );
-    // cubeMesh.transparency.set( 0.5 );
     scene.add( cubeMesh );
 
     renderer.setCurrentFrameBufferColor(

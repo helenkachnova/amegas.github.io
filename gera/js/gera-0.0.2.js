@@ -3563,20 +3563,19 @@
         };
     
         var animateScene = function() {
-            if ( this.scene.timer instanceof Gera.Scene.Timer ) {
-                this.scene.timer.updateCurrentTime();
+            if ( !this.scene.timer instanceof Gera.Scene.Timer )
+                throw new Error( 'Can\'t continue to animate the current scene, because the private scene animator object is NOT an instance of `Gera.Scene.Timer`.' );
     
-                for ( var i = 0; i < this.scene.children.length; i++ ) {
-                    var object = this.scene.children[ i ];
+            this.scene.timer.updateCurrentTime();
     
-                    if ( object instanceof Gera.Mesh ) {
-                        if ( object.rotation instanceof Gera.Rotation )
-                            object.rotate( object.rotation.vector, object.rotation.angle );
-                    }
+            for ( var i = 0; i < this.scene.children.length; i++ ) {
+                var object = this.scene.children[ i ];
+    
+                if ( object instanceof Gera.Mesh ) {
+                    if ( object.rotation instanceof Gera.Rotation )
+                        object.rotate( object.rotation.vector, object.rotation.angle );
                 }
             }
-            else
-                throw new Error( 'Can\'t continue to animate the current scene, because the private scene animator object is NOT an instance of `Gera.Scene.Timer`.' );
         };
     
         var drawScene = function() {
@@ -3638,7 +3637,6 @@
                 if ( item instanceof Gera.Mesh ) {
                     handleMeshObject.call( this, item );
                     drawMeshObject.call( this, item );
-                    handlePostProcessingDraw.call( this );
                 }
                 else if ( !( item instanceof Gera.Camera ) && !( item instanceof Gera.Mesh ) )
                     terminateRendererWork( this, 'Can\'t render the current scene, because it has a child, which is NOT one of the valid instances. The scene object must only hold the elements, which are the instances of: [ Gera.Camera, Gera.Mesh ].' );
@@ -3917,13 +3915,17 @@
                 transparency
             );
     
-            this.webglContext.enable( this.webglContext.BLEND );
-            this.webglContext.blendFunc(
-                this.webglContext.SRC_ALPHA,
-                this.webglContext.ONE_MINUS_SRC_ALPHA
-            );
+            if ( transparency < 1.0 ) {
+                this.webglContext.enable( this.webglContext.BLEND );
+                this.webglContext.blendFunc(
+                    this.webglContext.SRC_ALPHA,
+                    this.webglContext.ONE_MINUS_SRC_ALPHA
+                );
     
-            this.webglContext.disable( this.webglContext.DEPTH_TEST );
+                this.webglContext.disable( this.webglContext.DEPTH_TEST );
+            }
+            else
+                this.webglContext.enable( this.webglContext.DEPTH_TEST );
         };
     
         var drawMeshObject = function( mesh ) {
@@ -4298,10 +4300,6 @@
             }
     
             return null;
-        };
-    
-        var handlePostProcessingDraw = function() {
-            this.webglContext.enable( this.webglContext.DEPTH_TEST );
         };
     
         var terminateRendererWork = function( renderer, exceptionMessage ) {
