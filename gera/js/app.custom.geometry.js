@@ -41,27 +41,6 @@ var generateRandomArbitrary = function( minimum, maximum ) {
     return Math.random() * ( maximum - minimum ) + minimum;
 };
 
-var getWavefrontObjectModel = function( objectModelPath ) {
-    if ( typeof objectModelPath !== 'string' )
-        throw new Error( 'Can\'t get the Wavefront object file, because the given `objectModelPath` argument is NOT a type of `string`.' );
-
-    var promise = new Gera.Promise();
-
-    Gera.Ajax.sendRequest(
-        new Gera.Ajax.Request({
-            method: Gera.Ajax.HttpMethod.Get,
-            endpoint: objectModelPath,
-            asynchronous: true,
-            responseType: Gera.Ajax.ResponseType.Text
-        })
-    )
-    .then( function( response ) {
-        promise.resolve( response );
-    });
-
-    return promise;
-};
-
 var prepareMeshObject = function() {
     var fetchedObjects = {
         jsonModel: null,
@@ -161,26 +140,6 @@ window.onload = function( sender ) {
             scene.add( mesh );
         }
     });
-
-    var cubeMesh = new Gera.Mesh({
-        geometry: new Gera.Geometry({
-            type: Gera.Geometry.Type.Cube
-        }),
-        material: new Gera.Material(
-            new Gera.Texture({
-                type: Gera.Texture.Type.Color,
-                color: 0xff0000
-            })
-        )
-    });
-
-    cubeMesh.position.z = -15;
-    cubeMesh.wireframe.set( true );
-    cubeMesh.rotation = new Gera.Rotation({
-        vector: new Gera.Vector3( { x: 0, y: 1, z: 0 } ),
-        angle: 1.5
-    });
-    scene.add( cubeMesh );
 
     renderer.setCurrentFrameBufferColor(
         new Gera.Color.GlFloat({
