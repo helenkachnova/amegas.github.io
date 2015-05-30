@@ -3916,16 +3916,17 @@
             );
     
             if ( transparency < 1.0 ) {
+                this.webglContext.disable( this.webglContext.DEPTH_TEST );
                 this.webglContext.enable( this.webglContext.BLEND );
                 this.webglContext.blendFunc(
                     this.webglContext.SRC_ALPHA,
                     this.webglContext.ONE_MINUS_SRC_ALPHA
                 );
     
-                this.webglContext.disable( this.webglContext.DEPTH_TEST );
+                this.webglContext.cullFace( this.webglContext.BACK );
             }
-            else
-                this.webglContext.enable( this.webglContext.DEPTH_TEST );
+    
+            this.webglContext.enable( this.webglContext.DEPTH_TEST );
         };
     
         var drawMeshObject = function( mesh ) {
