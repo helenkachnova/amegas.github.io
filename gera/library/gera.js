@@ -752,6 +752,16 @@
             this.y = normalizedVector.y;
         };
     
+        Gera.Vector2.prototype.scale = function( scaleFactor ) {
+            var scaledVector = Gera.Math.scaleTwoDimensionalVector( this, scaleFactor );
+    
+            if ( !( scaledVector ) )
+                throw new Error( 'The vector object can\'t be scaled, because the result object from `Gera.Math.scaleTwoDimensionalVector( vector, scalar )` method is NOT an instance of `Gera.Vector2`.' );
+    
+            this.x = scaledVector.x;
+            this.y = scaledVector.y;
+        };
+    
         Gera.Vector3 = function() {
             if ( arguments.length === 0 ) {
                 this.x = 0;
@@ -797,6 +807,17 @@
             this.x = normalizedVector.x;
             this.y = normalizedVector.y;
             this.z = normalizedVector.z;
+        };
+    
+        Gera.Vector3.prototype.scale = function( scaleFactor ) {
+            var scaledVector = Gera.Math.scaleThreeDimensionalVector( this, scaleFactor );
+    
+            if ( !( scaledVector ) )
+                throw new Error( 'The vector object can\'t be scaled, because the result object from `Gera.Math.scaleThreeDimensionalVector( vector, scalar )` method is NOT an instance of `Gera.Vector3`.' );
+    
+            this.x = scaledVector.x;
+            this.y = scaledVector.y;
+            this.z = scaledVector.z;
         };
     
         Gera.Vector4 = function() {
@@ -846,6 +867,18 @@
             this.y = normalizedVector.y;
             this.z = normalizedVector.z;
             this.w = normalizedVector.w;
+        };
+    
+        Gera.Vector4.prototype.scale = function( scaleFactor ) {
+            var scaledVector = Gera.Math.scaleFourDimensionalVector( this, scaleFactor );
+    
+            if ( !( scaledVector ) )
+                throw new Error( 'The vector object can\'t be scaled, because the result object from `Gera.Math.scaleFourDimensionalVector( vector, scalar )` method is NOT an instance of `Gera.Vector4`.' );
+    
+            this.x = scaledVector.x;
+            this.y = scaledVector.y;
+            this.z = scaledVector.z;
+            this.w = scaledVector.w;
         };
     
         var checkInputArguments = function( inputArguments ) {
@@ -1241,9 +1274,84 @@
             return resultMatrix;
         };
     
+        Gera.Math.inverseThreeDimensionalMatrixFromFour = function( matrix ) {
+            if ( !( matrix instanceof Float32Array ) )
+                throw new Error( 'Can\'t inverse the three-dimensional matrix, because the given matrix object is NOT an instance of `Float32Array`.' );
+    
+            var coefficientA =
+                 matrix[ 10 ] * matrix[ 5 ] -
+                 matrix[ 6  ] * matrix[ 9 ];
+    
+            var coefficientB =
+                -matrix[ 10 ] * matrix[ 4 ] +
+                 matrix[ 6  ] * matrix[ 8 ];
+    
+            var coefficientC =
+                 matrix[ 9 ] * matrix[ 4 ] -
+                 matrix[ 5 ] * matrix[ 8 ];
+    
+            var determinant =
+                 matrix[ 0 ] * coefficientA +
+                 matrix[ 1 ] * coefficientB +
+                 matrix[ 2 ] * coefficientC;
+    
+            var inversedDeterminant =  1 / determinant;
+            var resultMatrix = new Gera.Matrix3();
+    
+            resultMatrix[ 0 ] = coefficientA * inversedDeterminant;
+    
+            resultMatrix[ 1 ] =
+                ( -matrix[ 10 ] * matrix[ 1 ] +
+                   matrix[ 2  ] * matrix[ 9 ] ) * inversedDeterminant;
+    
+            resultMatrix[ 2 ] =
+                ( matrix[ 6 ] * matrix[ 1 ] -
+                  matrix[ 2 ] * matrix[ 5 ] ) * inversedDeterminant;
+    
+            resultMatrix[ 3 ] = coefficientB * inversedDeterminant;
+    
+            resultMatrix[ 4 ] =
+                ( matrix[ 10 ] * matrix[ 0 ] -
+                  matrix[ 2  ] * matrix[ 8 ] ) * inversedDeterminant;
+    
+            resultMatrix[ 5 ] =
+                ( -matrix[ 6 ] * matrix[ 0 ] +
+                   matrix[ 2 ] * matrix[ 4 ] ) * inversedDeterminant;
+    
+            resultMatrix[ 6 ] = coefficientC * inversedDeterminant;
+    
+            resultMatrix[ 7 ] =
+                ( -matrix[ 9 ] * matrix[ 0 ] +
+                   matrix[ 1 ] * matrix[ 8 ] ) * inversedDeterminant;
+    
+            resultMatrix[ 8 ] =
+                ( matrix[ 5 ] * matrix[ 0 ] -
+                  matrix[ 1 ] * matrix[ 4 ] ) * inversedDeterminant;
+    
+            return resultMatrix;
+        };
+    
+        Gera.Math.transposeThreeDimensionalMatrix = function( matrix ) {
+            if ( !( matrix instanceof Float32Array ) )
+                throw new Error( 'Can\'t transpose the three-dimensional matrix, because the given matrix object is NOT an instance of `Float32Array`.' );
+    
+            var valueA = matrix[ 1 ];
+            var valueB = matrix[ 2 ];
+            var valueC = matrix[ 5 ];
+    
+            matrix[ 1 ] = matrix[ 3 ];
+            matrix[ 2 ] = matrix[ 6 ];
+            matrix[ 3 ] = valueA;
+            matrix[ 5 ] = matrix[ 7 ];
+            matrix[ 6 ] = valueB;
+            matrix[ 7 ] = valueC;
+    
+            return matrix;
+        };
+    
         Gera.Math.calculateTwoDimensionalVectorLength = function( vector ) {
             if ( !( vector instanceof Gera.Vector2 ) )
-                throw new Error( 'Can\'t calculate the length of the given two dimensional vector, because it\'s NOT an instance of `Gera.Vector2`.' );
+                throw new Error( 'Can\'t calculate the length of the given two-dimensional vector, because it\'s NOT an instance of `Gera.Vector2`.' );
     
             return Math.sqrt(
                 Math.pow( vector.x, 2 ) +
@@ -1253,7 +1361,7 @@
     
         Gera.Math.calculateThreeDimensionalVectorLength = function( vector ) {
             if ( !( vector instanceof Gera.Vector3 ) )
-                throw new Error( 'Can\'t calculate the length of the given three dimensional vector, because it\'s NOT an instance of `Gera.Vector3`.' );
+                throw new Error( 'Can\'t calculate the length of the given three-dimensional vector, because it\'s NOT an instance of `Gera.Vector3`.' );
     
             return Math.sqrt(
                 Math.pow( vector.x, 2 ) +
@@ -1264,7 +1372,7 @@
     
         Gera.Math.calculateFourDimensionalVectorLength = function( vector ) {
             if ( !( vector instanceof Gera.Vector4 ) )
-                throw new Error( 'Can\'t calculate the length of the given four dimensional vector, because it\'s NOT an instance of `Gera.Vector4`.' );
+                throw new Error( 'Can\'t calculate the length of the given four-dimensional vector, because it\'s NOT an instance of `Gera.Vector4`.' );
     
             return Math.sqrt(
                 Math.pow( vector.x, 2 ) +
@@ -1276,12 +1384,12 @@
     
         Gera.Math.normalizeTwoDimensionalVector = function( vector ) {
             if ( !( vector instanceof Gera.Vector2 ) )
-                throw new Error( 'Can\'t normalize the given two dimensional vector, because it\'s NOT an instance of `Gera.Vector2`.' );
+                throw new Error( 'Can\'t normalize the given two-dimensional vector, because it\'s NOT an instance of `Gera.Vector2`.' );
     
             var length = Gera.Math.calculateTwoDimensionalVectorLength( vector );
     
             if ( typeof length !== 'number' )
-                throw new Error( 'Can\'t normalize the given two dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
+                throw new Error( 'Can\'t normalize the given two-dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
     
             if ( length === 0 )
                 return vector;
@@ -1296,12 +1404,12 @@
     
         Gera.Math.normalizeThreeDimensionalVector = function( vector ) {
             if ( !( vector instanceof Gera.Vector3 ) )
-                throw new Error( 'Can\'t normalize the given three dimensional vector, because it\'s NOT an instance of `Gera.Vector3`.' );
+                throw new Error( 'Can\'t normalize the given three-dimensional vector, because it\'s NOT an instance of `Gera.Vector3`.' );
     
             var length = Gera.Math.calculateThreeDimensionalVectorLength( vector );
     
             if ( typeof length !== 'number' )
-                throw new Error( 'Can\'t normalize the given three dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
+                throw new Error( 'Can\'t normalize the given three-dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
     
             if ( length === 0 )
                 return vector;
@@ -1317,12 +1425,12 @@
     
         Gera.Math.normalizeFourDimensionalVector = function( vector ) {
             if ( !( vector instanceof Gera.Vector4 ) )
-                throw new Error( 'Can\'t normalize the given four dimensional vector, because it\'s NOT an instance of `Gera.Vector4`.' );
+                throw new Error( 'Can\'t normalize the given four-dimensional vector, because it\'s NOT an instance of `Gera.Vector4`.' );
     
             var length = Gera.Math.calculateFourDimensionalVectorLength( vector );
     
             if ( typeof length !== 'number' )
-                throw new Error( 'Can\'t normalize the given four dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
+                throw new Error( 'Can\'t normalize the given four-dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
     
             if ( length === 0 )
                 return vector;
@@ -1335,6 +1443,54 @@
                 z: vector.z * factor,
                 w: vector.w * factor
             });
+        };
+    
+        Gera.Math.scaleTwoDimensionalVector = function( vector, scalar ) {
+            if ( !( vector instanceof Gera.Vector2 ) )
+                throw new Error( 'Can\'t scale the two-dimensional vector by the scalar value, because the given vector object is NOT an instance of `Gera.Vector2`.' );
+    
+            if ( typeof scalar !== 'number' )
+                throw new Error( 'Can\'t scale the two-dimensional vector by the scalar value, because the given scalar value is NOT a type of `number`.' );
+    
+            var resultVector = new Gera.Vector2({
+                x: vector.x * scalar,
+                y: vector.y * scalar,
+            });
+    
+            return resultVector;
+        };
+    
+        Gera.Math.scaleThreeDimensionalVector = function( vector, scalar ) {
+            if ( !( vector instanceof Gera.Vector3 ) )
+                throw new Error( 'Can\'t scale the three-dimensional vector by the scalar value, because the given vector object is NOT an instance of `Gera.Vector3`.' );
+    
+            if ( typeof scalar !== 'number' )
+                throw new Error( 'Can\'t scale the three-dimensional vector by the scalar value, because the given scalar value is NOT a type of `number`.' );
+    
+            var resultVector = new Gera.Vector3({
+                x: vector.x * scalar,
+                y: vector.y * scalar,
+                z: vector.z * scalar
+            });
+    
+            return resultVector;
+        };
+    
+        Gera.Math.scaleFourDimensionalVector = function( vector, scalar ) {
+            if ( !( vector instanceof Gera.Vector4 ) )
+                throw new Error( 'Can\'t scale the four-dimensional vector by the scalar value, because the given vector object is NOT an instance of `Gera.Vector4`.' );
+    
+            if ( typeof scalar !== 'number' )
+                throw new Error( 'Can\'t scale the four-dimensional vector by the scalar value, because the given scalar value is NOT a type of `number`.' );
+    
+            var resultVector = new Gera.Vector4({
+                x: vector.x * scalar,
+                y: vector.y * scalar,
+                z: vector.z * scalar,
+                w: vector.w * scalar
+            });
+    
+            return resultVector;
         };
     
         Gera.Math.convertQuaternionToMatrix = function( quaternion ) {
@@ -1633,6 +1789,10 @@
             handleCustomMatrixArguments.call( this, arguments );
         };
     
+        Gera.Matrix3 = function() {
+            return new Float32Array( 9 );
+        };
+    
         var prepareEmptyMatrixEntity = function() {
             var matrix = new Float32Array( 16 );
             matrix.multiplyByMatrix = multiplyCurrentMatrixByMatrix;
@@ -1846,8 +2006,8 @@
         this.webglContext.compileShader( shaderObject );
     
         if ( !this.webglContext.getShaderParameter( shaderObject, this.webglContext.COMPILE_STATUS ) ) {
-            var errorMessage = this.webglContext.getShaderInfoLog( shaderProgram );
-            this.webglContext.deleteProgram( shaderProgram );
+            var errorMessage = this.webglContext.getShaderInfoLog( shaderObject );
+            this.webglContext.deleteShader( shaderObject );
             throw new Error(
                 String.prototype.concat(
                     'Can\'t compile the shader with the given source code. Error message from the WebGL context about the shader compilation failure:\r\n',
@@ -1891,8 +2051,18 @@
             throw new Error( 'Can\'t prepare the uniforms locations for the shader program, because the shader program object is NOT an instance of `WebGLProgram`.' );
     
         shaderProgram.uniforms = {
+            // matrices
             projectionMatrix: this.prepareUniformLocation( shaderProgram, 'projectionMatrix' ),
             modelViewMatrix: this.prepareUniformLocation( shaderProgram, 'modelViewMatrix' ),
+            normalMatrix: this.prepareUniformLocation( shaderProgram, 'normalMatrix' ),
+    
+            // lighting
+            ambientColor: this.prepareUniformLocation( shaderProgram, 'ambientColor' ),
+            lightingDirection: this.prepareUniformLocation( shaderProgram, 'lightingDirection' ),
+            directionalColor: this.prepareUniformLocation( shaderProgram, 'directionalColor' ),
+            lightingEnabled: this.prepareUniformLocation( shaderProgram, 'lightingEnabled' ),
+    
+            // material
             textureSampler: this.prepareUniformLocation( shaderProgram, 'textureSampler' ),
             alphaValue: this.prepareUniformLocation( shaderProgram, 'alphaValue' ),
             hasMeshTexture: this.prepareUniformLocation( shaderProgram, 'hasMeshTexture' )
@@ -1930,7 +2100,8 @@
         shaderProgram.attributes = {
             vertexPosition: this.prepareAttributeLocation( shaderProgram, 'vertexPosition' ),
             vertexColor: this.prepareAttributeLocation( shaderProgram, 'vertexColor' ),
-            vertexTexture: this.prepareAttributeLocation( shaderProgram, 'vertexTextureUv' )
+            vertexTexture: this.prepareAttributeLocation( shaderProgram, 'vertexTextureUv' ),
+            vertexNormal: this.prepareAttributeLocation( shaderProgram, 'vertexNormal' )
         };
     
         this.enableVertexAttributes( shaderProgram.attributes );
@@ -1965,6 +2136,7 @@
             throw new Error( 'Can\'t enable the vertex attributes, because attributes object is NOT a type of `object`.' );
     
         this.enableVertexAtrributeArray( attributes.vertexPosition );
+        this.enableVertexAtrributeArray( attributes.vertexNormal );
     };
     
     ShaderManager.prototype.enableVertexAtrributeArray = function( attributeIndex ) {
@@ -1975,36 +2147,53 @@
     };
     
     ShaderManager.prototype.getVertexShaderSource = function() {
-        return 'attribute vec3 vertexPosition;\
+        return 'precision highp float;\
+                attribute vec3 vertexPosition;\
                 attribute vec4 vertexColor;\
                 attribute vec2 vertexTextureUv;\
+                attribute vec3 vertexNormal;\
                 uniform mat4 modelViewMatrix;\
                 uniform mat4 projectionMatrix;\
+                uniform mat3 normalMatrix;\
+                uniform vec3 ambientColor;\
+                uniform vec3 lightingDirection;\
+                uniform vec3 directionalColor;\
+                uniform bool lightingEnabled;\
                 varying vec4 vertexColorReference;\
                 varying vec2 vertexTextureUvReference;\
+                varying vec3 vertexLightColorReference;\
                 \
                 void main( void ) {\
                     gl_Position = projectionMatrix * modelViewMatrix * vec4( vertexPosition, 1.0 );\
                     vertexColorReference = vertexColor;\
                     vertexTextureUvReference = vertexTextureUv;\
+                    \
+                    if ( !lightingEnabled )\
+                        vertexLightColorReference = vec3( 1.0, 1.0, 1.0 );\
+                    else {\
+                        vec3 transofrmedNormal = normalMatrix * vertexNormal;\
+                        float lightWeight = max( dot ( transofrmedNormal, lightingDirection ), 0.0 );\
+                        vertexLightColorReference = ambientColor + directionalColor * lightWeight;\
+                    }\
                 }';
     };
     
     ShaderManager.prototype.getFragmentShaderSource = function() {
-        return 'precision mediump float;\
+        return 'precision highp float;\
                 uniform sampler2D textureSampler;\
                 uniform float alphaValue;\
                 uniform bool hasMeshTexture;\
                 varying vec4 vertexColorReference;\
                 varying vec2 vertexTextureUvReference;\
+                varying vec3 vertexLightColorReference;\
                 \
                 void main( void ) {\
                     if ( hasMeshTexture ) {\
                         vec4 texel = texture2D( textureSampler, vec2( vertexTextureUvReference.s, vertexTextureUvReference.t ) );\
-                        gl_FragColor = vec4( texel.rgb, texel.a * alphaValue );\
+                        gl_FragColor = vec4( texel.rgb * vertexLightColorReference, texel.a * alphaValue );\
                     }\
                     else\
-                        gl_FragColor = vec4( vertexColorReference.rgb, vertexColorReference.a * alphaValue );\
+                        gl_FragColor = vec4( vertexColorReference.rgb * vertexLightColorReference, vertexColorReference.a * alphaValue );\
                 }';
     };
 
@@ -2021,7 +2210,9 @@
             ];
     
             for ( var item in properties )
-                this[ properties[ item ] ] = null; 
+                this[ properties[ item ] ] = null;
+    
+            handleInputArguments.call( this, arguments[ 0 ] );
         };
     
         Gera.Color.Type = {
@@ -2058,6 +2249,54 @@
         Gera.Color.GlFloat = function() {
             checkInputArguments( arguments );
             setColorComponentProperties( this, arguments[ 0 ] );
+        };
+    
+        var handleInputArguments = function( inputArguments ) {
+            if ( typeof inputArguments === 'object' ) {
+                handleInputColorComponent.call(
+                    this,
+                    inputArguments.type,
+                    inputArguments.value
+                );
+            }
+        };
+    
+        var handleInputColorComponent = function( colorType, component ) {
+            if ( typeof colorType !== 'number' )
+                throw new Error( 'Can\'t create a new `Gera.Color` object, because the given color type is NOT a type of `number`.' );
+    
+            switch ( colorType ) {
+                case Gera.Color.Type.Integer:
+                    setColorByIntegerValue.call( this, component );
+                    break;
+                case Gera.Color.Type.HexadecimalString:
+                    setColorByHexString.call( this, component );
+                    break;
+                case Gera.Color.Type.RgbaObject:
+                    setColorByRgbaObject.call(
+                        this,
+                        new Gera.Color.Rgba({
+                            red: component.red,
+                            green: component.green,
+                            blue: component.blue,
+                            alpha: component.alpha
+                        })
+                    );
+                    break;
+                case Gera.Color.Type.GlFloat:
+                    setColorByGlFloatObject.call(
+                        this,
+                        new Gera.Color.Rgba({
+                            red: component.red,
+                            green: component.green,
+                            blue: component.blue,
+                            alpha: component.alpha
+                        })
+                    );
+                    break;
+                default:
+                    throw new Error( 'Can\'t create a new `Gera.Color` object, because the given color type is NOT associated with any one type, existed in the `Gera.Color.Type` enumeration.' );
+            }
         };
     
         var setColorByIntegerValue = function( integerValue ) {
@@ -2155,7 +2394,6 @@
             rgbPartValue = Math.max( 0, Math.min( rgbPartValue, 255 ) );
     
             var hexString = String.prototype.concat(
-                '#',
                 '0123456789abcdef'.charAt( ( rgbPartValue - rgbPartValue % 16 ) / 16 ),
                 '0123456789abcdef'.charAt( rgbPartValue % 16 )
             );
@@ -2328,7 +2566,7 @@
             return integerValue;
         };
     
-        Gera.Color.prototype.convertGlFloatObjectToHexString = function() {
+        Gera.Color.prototype.convertGlFloatObjectToHexString = function( glFloatObject ) {
             if ( !( glFloatObject instanceof Gera.Color.GlFloat ) )
                 throw new Error( 'Can\'t convert GL float object to the hexadecimal string, because it\'s NOT an instance of `Gera.Color.GlFloat`.' );
     
@@ -2343,7 +2581,7 @@
             return hexString;
         };
     
-        Gera.Color.prototype.convertGlFloatObjectToRgbaObject = function() {
+        Gera.Color.prototype.convertGlFloatObjectToRgbaObject = function( glFloatObject ) {
             if ( !( glFloatObject instanceof Gera.Color.GlFloat ) )
                 throw new Error( 'Can\'t convert GL float object to the RGBA object, because it\'s NOT an instance of `Gera.Color.GlFloat`.' );
     
@@ -2723,7 +2961,22 @@
                 ]),
                 size: Object.keys( new Gera.Vector2 ).length
             }),
-            uvIndices: null
+            uvIndices: null,
+            normals: new Gera.Matrix.Custom({
+                data: new Float32Array([
+                    // First triangle
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0,
+    
+                    // Second triangle
+                    0.0, 0.0, -1.0,
+                    0.0, 0.0, -1.0,
+                    0.0, 0.0, -1.0
+                ]),
+                size: Object.keys( new Gera.Vector3 ).length
+            }),
+            normalIndices: null
         };
     };
     
@@ -2834,7 +3087,48 @@
                 ]),
                 size: Object.keys( new Gera.Vector2 ).length
             }),
-            uvIndices: null
+            uvIndices: null,
+            normals: new Gera.Matrix.Custom({
+                data: new Float32Array([
+                    // Front face
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0,
+    
+                    // Back face
+                    0.0, 0.0, -1.0,
+                    0.0, 0.0, -1.0,
+                    0.0, 0.0, -1.0,
+                    0.0, 0.0, -1.0,
+    
+                    // Top face
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 0.0,
+    
+                    // Bottom face
+                    0.0, -1.0, 0.0,
+                    0.0, -1.0, 0.0,
+                    0.0, -1.0, 0.0,
+                    0.0, -1.0, 0.0,
+    
+                    // Right face
+                    1.0, 0.0, 0.0,
+                    1.0, 0.0, 0.0,
+                    1.0, 0.0, 0.0,
+                    1.0, 0.0, 0.0,
+    
+                    // Left face
+                    -1.0, 0.0, 0.0,
+                    -1.0, 0.0, 0.0,
+                    -1.0, 0.0, 0.0,
+                    -1.0, 0.0, 0.0
+                ]),
+                size: Object.keys( new Gera.Vector3 ).length
+            }),
+            normalIndices: null
         };
     };
     
@@ -3252,6 +3546,99 @@
 
     ( function( Gera ) {
     
+        Gera.Light = function() {
+            setProperties.call( this );
+            handleInputArguments.call( this, arguments[ 0 ] );
+        };
+    
+        Gera.Light.Type = {
+            Point: 0,
+            Directional: 1,
+            Spot: 2,
+            Hemispheric: 3
+        };
+    
+        function setProperties() {
+            if ( !( this instanceof Gera.Light ) )
+                throw new Error( 'Can\'t set properties for the new `Gera.Light` object, because the current context is NOT an instance of `Gera.Light`.' );
+    
+            this.posititon = new Gera.Vector3();
+            this.direction = new Gera.Vector3();
+            this.color = new Gera.Color({
+                type: Gera.Color.Type.RgbaObject,
+                value: { red: 0xff, green: 0xff, blue: 0xff, alpha: 0xff }
+            });
+        }
+    
+        function handleInputArguments( inputArguments ) {
+            if ( typeof inputArguments === 'object' ) {
+                handleInputType.call( this, inputArguments.type );
+                handleInputPosition.call( this, inputArguments.posititon );
+                handleInputDirection.call( this, inputArguments.direction );
+                handleInputColor.call( this, inputArguments.color );
+            }
+        }
+    
+        function handleInputType( lightType ) {
+            if ( typeof lightType !== 'number' )
+                throw new Error( 'Can\'t create the new `Gera.Light` object, because the given light type value is NOT a type of `number`.' );
+    
+            if ( !( this instanceof Gera.Light ) )
+                throw new Error( 'Can\'t handle the input light type, because the current context is NOT an instance of `Gera.Light`.' );
+    
+            switch ( lightType ) {
+                case Gera.Light.Type.Point:
+                case Gera.Light.Type.Directional:
+                case Gera.Light.Type.Spot:
+                case Gera.Light.Type.Hemispheric:
+                    this.type = lightType;
+                    break;
+                default:
+                    throw new Error( 'Can\'t create the new `Gera.Light` object, because the given light type value is NOT associated with any one type, existed in the `Gera.Light.Type` enumeration.' );
+            }
+        }
+    
+        function handleInputPosition( posititon ) {
+            if ( posititon ) {
+                if ( !( posititon instanceof Gera.Vector3 ) )
+                    throw new Error( 'Can\'t create the new `Gera.Light` object, because the given posititon object is NOT an instance of `Gera.Vector3`.' );
+    
+                this.posititon = posititon;
+            }
+            else
+                this.posititon = new Gera.Vector3();
+        }
+    
+        function handleInputDirection( direction ) {
+            if ( direction ) {
+                if ( !( direction instanceof Gera.Vector3 ) )
+                    throw new Error( 'Can\'t create the new `Gera.Light` object, because the given direction object is NOT an instance of `Gera.Vector3`.' );
+    
+                this.direction = direction;
+            }
+            else
+                this.direction = new Gera.Vector3();
+        }
+    
+        function handleInputColor( color ) {
+            if ( color ) {
+                if ( !( color instanceof Gera.Color ) )
+                    throw new Error( 'Can\'t create the new `Gera.Light` object, because the given color object is NOT an instance of `Gera.Color`.' );
+    
+                this.color = color;
+            }
+            else {
+                this.color = new Gera.Color({
+                    type: Gera.Color.Type.RgbaObject,
+                    value: { red: 0xff, green: 0xff, blue: 0xff, alpha: 0xff }
+                }); 
+            }
+        }
+    
+    })( libraryObject );
+
+    ( function( Gera ) {
+    
         Gera.Buffer = function() {
             throw new Error( 'You\'re trying to create an instance of abstract `Gera.Buffer` prototype.' );
         };
@@ -3454,7 +3841,8 @@
         Gera.Mesh.GlBuffer.Type = {
             Geometry: 0,
             Color: 1,
-            Texture: 2
+            Texture: 2,
+            Normals: 3
         };
     
         Gera.Mesh.GlBuffer.Options = function() {
@@ -3469,7 +3857,7 @@
             if ( arguments.length === 0 )
                 throw new Error( 'Can\'t create a new `Gera.Mesh.GlBuffers` object, because the input arguments count equals zero.' );
     
-            var properties = [ 'geometry', 'color', 'texture' ];
+            var properties = [ 'geometry', 'color', 'texture', 'normals' ];
     
             for ( var item in properties )
                 this[ properties[ item ] ] = new Gera.Mesh.GlBuffer.Options();
@@ -3520,6 +3908,10 @@
             this.glBuffers = null;
             this.geometry = settings.geometry;
             this.material = settings.material;
+            this.ambientColor = new Gera.Color({
+                type: Gera.Color.Type.RgbaObject,
+                value: { red: 0xff, green: 0xff, blue: 0xff, alpha: 0xff }
+            });
             this.customDrawMode = settings.drawMode;
             this.wireframe = new Gera.Mesh.Wireframe();
             this.position = new Gera.Vector3();
@@ -3562,6 +3954,14 @@
                             buffers[ item ].indices
                         );
                         break;
+                    case 'normals':
+                        bindBufferData.call(
+                            this,
+                            Gera.Mesh.GlBuffer.Type.Normals,
+                            buffers[ item ].vertices,
+                            buffers[ item ].indices
+                        );
+                        break;
                     default:
                         throw new Error( 'Can\'t prepare the WebGL buffers for mesh, because the input buffers object contains the incorrect properties. The valid properties are the next: [ geometry, color, texture ].' );
                 }
@@ -3590,6 +3990,10 @@
                 case Gera.Mesh.GlBuffer.Type.Texture:
                     this.texture.vertices = vertices;
                     this.texture.indices = indices;
+                    break;
+                case Gera.Mesh.GlBuffer.Type.Normals:
+                    this.normals.vertices = vertices;
+                    this.normals.indices = indices;
                     break;
                 default:
                     throw new Error( 'Can\'t bind the buffer data, because the input buffer type is NOT associated with any one type, existed in the `Gera.Mesh.GlBuffer.Type` enumeration.' );
@@ -3732,8 +4136,8 @@
             if ( !( this.children instanceof Array ) )
                 throw new Error( 'Can\'t add any item to the children collection, because it\'s NOT an instance of `Array`.' );
     
-            if ( !( item instanceof Gera.Camera ) && !( item instanceof Gera.Mesh ) )
-                throw new Error( 'Can\'t add the item to the class collection, because its instance is different from the of them: [ Gera.Camera, Gera.Mesh ].' );
+            if ( !checkIsItemSceneObject( item ) )
+                throw new Error( 'Can\'t add the item to the class collection, because its instance is different from the of them: [ Gera.Camera, Gera.Mesh, Gera.Light ].' );
     
             item.guid = new Gera.Guid();
     
@@ -3741,6 +4145,19 @@
                 item.guid = new Gera.Guid();
     
             this.children.push( item );
+        };
+    
+        Gera.Scene.prototype.getIlluminationObjects = function() {
+            var lights = new Array();
+    
+            for ( var i = 0; i < this.children.length; i++ ) {
+                var item = this.children[ i ];
+    
+                if ( item instanceof Gera.Light )
+                    lights.push( item );
+            }
+    
+            return ( lights.length === 0 ) ? null : lights;
         };
     
         Gera.Scene.prototype.getByGuid = function( guid ) {
@@ -3813,6 +4230,10 @@
             return this.timer;
         };
     
+        Gera.Scene.prototype.checkIsItemAllowedToAdd = function( item ) {
+            return checkIsItemSceneObject( item );
+        };
+    
         Gera.Scene.Timer = function() {
             var properties = [ 'now', 'last', 'elapsed' ];
     
@@ -3831,6 +4252,28 @@
     
             this.last = this.now;
         };
+    
+        var checkIsItemSceneObject = function( item ) {
+            var types = getAllowedChildrenTypes();
+    
+            if ( !( types instanceof Array ) )
+                throw new Error( 'Can\'t check if scene is able to add the given item, because the fetched private collection with allowed child types is NOT an instance of `Array`.' );
+    
+            for ( var i = 0; i < types.length; i++ ) {
+                if ( item instanceof types[ i ] )
+                    return true;
+            }
+    
+            return false;
+        }
+    
+        var getAllowedChildrenTypes = function() {
+            return [
+                Gera.Camera,
+                Gera.Mesh,
+                Gera.Light
+            ];
+        }
     
     })( libraryObject );
 
@@ -4066,8 +4509,9 @@
                     handleMeshObject.call( this, item );
                     drawMeshObject.call( this, item );
                 }
-                else if ( !( item instanceof Gera.Camera ) && !( item instanceof Gera.Mesh ) )
-                    terminateRendererWork( this, 'Can\'t render the current scene, because it has a child, which is NOT one of the valid instances. The scene object must only hold the elements, which are the instances of: [ Gera.Camera, Gera.Mesh ].' );
+    
+                if ( !this.scene.checkIsItemAllowedToAdd( item ) )
+                    terminateRendererWork( this, 'Can\'t render the current scene, because it has a child, which is NOT one of the valid instances. The scene object must only hold the elements, which are the instances of: [ Gera.Camera, Gera.Mesh, Gera.Light ].' );
             }
         };
     
@@ -4107,6 +4551,7 @@
             handleMeshMatrices.call( this, mesh );
             handleMeshGeometryBuffer.call( this, mesh );
             handleMeshTextures.call( this, mesh );
+            handleMeshNormals.call( this, mesh );
             handleMeshTransparency.call( this, mesh );
     
             this.webglContext.uniformMatrix4fv(
@@ -4275,6 +4720,32 @@
             }
         };
     
+        var setMeshNormalsBuffer = function( mesh ) {
+            if ( !( mesh instanceof Gera.Mesh ) )
+                throw new Error( 'Can\'t set buffers for the normals of mesh, because the given mesh object is NOT an insta of `Gera.Mesh`.' );
+    
+            this.webglContext.bindBuffer(
+                this.webglContext.ARRAY_BUFFER,
+                mesh.glBuffers.normals.vertices
+            );
+    
+            this.webglContext.vertexAttribPointer(
+                this.webglContext.shaderProgram.attributes.vertexNormal,
+                mesh.glBuffers.normals.vertices.info.size,
+                this.webglContext.FLOAT,
+                false,
+                0,
+                0
+            );
+    
+            if ( mesh.glBuffers.texture.indices instanceof WebGLBuffer ) {
+                this.webglContext.bindBuffer(
+                    this.webglContext.ELEMENT_ARRAY_BUFFER,
+                    mesh.glBuffers.normals.indices
+                );
+            }
+        };
+    
         var initializeImageTexture = function( texture ) {
             if ( !( texture instanceof Gera.Texture ) )
                 throw new Error( 'Can\'t handle the uninitialized texture image, because the subproperty `texture` of property `material` from the given mesh object is NOT an instance of `Gera.Texture`.' );
@@ -4426,6 +4897,135 @@
             this.webglContext.bindTexture( this.webglContext.TEXTURE_2D, texture.glTexture );
     
             texture.initialized = true;
+        };
+    
+        var handleMeshNormals = function( mesh ) {
+            if ( !( mesh instanceof Gera.Mesh ) )
+                throw new Error( 'Can\'t handle the mesh normals, because the given mesh object is NOT an instance of `Gera.Mesh`.' );
+    
+            if ( !( mesh.geometry.normals instanceof Gera.Matrix.Custom ) )
+                throw new Error( 'Can\'t handle the mesh normals, because the binded `normals` property from the property `geometry` of the mesh object is NOT defined.' );
+    
+            setMeshNormalsBuffer.call( this, mesh );
+    
+            var light = this.scene.getIlluminationObjects();
+    
+            if ( light && light[ 0 ] instanceof Gera.Light )
+                handleMeshIlluminatedMaterial.call( this, mesh, light[ 0 ] );
+            else
+                setMeshIlluminationUniform.call( this, false );
+        }
+    
+        var handleMeshIlluminatedMaterial = function( mesh, light ) {
+            if ( !( mesh instanceof Gera.Mesh ) )
+                throw new Error( 'Can\'t handle the illuminated material of the mesh, because the given mesh object is NOT an instance of `Gera.Mesh`.' );
+    
+            if ( !( light instanceof Gera.Light ) )
+                throw new Error( 'Can\'t handle the illuminated material of the mesh, because the given light object is NOT an instance of `Gera.Light`.' );
+    
+            setMeshIlluminationUniform.call( this, true );
+            setNormalMatrixUniform.call( this );
+            handleMeshAmbientColor.call( this, mesh );
+            setLightingDirectionUniform.call( this, light.direction );
+            setDirectionalLightColorUniform.call( this, light.color );
+        };
+    
+        var setMeshIlluminationUniform = function( isIlluminated ) {
+            if ( typeof isIlluminated !== 'boolean' )
+                throw new Error( 'Can\'t set the boolean uniform variable in shader, which defines if mesh is illuminated or not, because the given boolean argument `isIlluminated` is NOT a type of `boolean`.' );
+    
+            var uniformLocation = this.webglContext.shaderProgram.uniforms.lightingEnabled;
+    
+            if ( !( uniformLocation instanceof WebGLUniformLocation ) )
+                throw new Error( 'Can\'t set the boolean uniform variable in shader, which defines if mesh is illuminated, because the fetched uniform location is NOT an instance of `WebGLUniformLocation`.' );
+    
+            this.webglContext.uniform1i( uniformLocation, isIlluminated );
+        };
+    
+        var setNormalMatrixUniform = function() {
+            if ( !( this.scene.modelViewMatrix instanceof Float32Array ) )
+                throw new Error( 'Can\'t set normal matrix uniform, because the binded Model-View matrix is NOT an instance of `Float32Array`.' );
+    
+            var inverse = Gera.Math.inverseThreeDimensionalMatrixFromFour;
+            var transpose = Gera.Math.transposeThreeDimensionalMatrix;
+    
+            var inversedMatrix = inverse( this.scene.modelViewMatrix );
+            var transposedMatrix = transpose( inversedMatrix );
+    
+            var uniformLocation = this.webglContext.shaderProgram.uniforms.normalMatrix;
+    
+            if ( !( uniformLocation instanceof WebGLUniformLocation ) )
+                throw new Error( 'Can\'t set the matrix uniform variable in shader, which defines the values of the normal matrix, because the fetched uniform location is NOT an instance of `WebGLUniformLocation`.' );
+    
+            this.webglContext.uniformMatrix3fv(
+                uniformLocation,
+                false,
+                transposedMatrix
+            );
+        };
+    
+        var handleMeshAmbientColor = function( mesh ) {
+            if ( !( mesh instanceof Gera.Mesh ) )
+                throw new Error( 'Can\'t handle the ambient color of mesh, because the given mesh object is NOT an instance of `Gera.Mesh`.' );
+    
+            if ( !( mesh.ambientColor instanceof Gera.Color ) )
+                throw new Error( 'Can\'t handle the ambient color of mesh, because the `ambientColor` property of the mesh is NOT an instance of `Gera.Color`.' );
+    
+            var uniformLocation = this.webglContext.shaderProgram.uniforms.ambientColor;
+    
+            if ( !( uniformLocation instanceof WebGLUniformLocation ) )
+                throw new Error( 'Can\'t set the three-dimensional vector uniform variable in shader, which defines the value of the mesh ambient color, because the fetched uniform location is NOT an instance of `WebGLUniformLocation`.' );
+    
+            this.webglContext.uniform3f(
+                uniformLocation,
+                mesh.ambientColor.glFloat.red,
+                mesh.ambientColor.glFloat.green,
+                mesh.ambientColor.glFloat.blue
+            );
+        };
+    
+        var setLightingDirectionUniform = function( direction ) {
+            if ( !( direction instanceof Gera.Vector3 ) )
+                throw new Error( 'Can\'t set the three-dimensional vector uniform variable in shader, which defines the value of the lighting direction, because the given lighting direction object is NOT an instance of `Gera.Vector3`.' );
+    
+            var normalizedDirection = Gera.Math.normalizeThreeDimensionalVector( direction );
+    
+            if ( !( normalizedDirection instanceof Gera.Vector3 ) )
+                throw new Error( 'Can\'t set the three-dimensional vector uniform variable in shader, which defines the value of the lighting direction, because the calculated normalized direction is NOT an instance of `Gera.Vector3`.' );
+    
+            var scaledVector = Gera.Math.scaleThreeDimensionalVector( normalizedDirection, -1 );
+    
+            if ( !( scaledVector instanceof Gera.Vector3 ) )
+                throw new Error( 'Can\'t set the three-dimensional vector uniform variable in shader, which defines the value of the lighting direction, because the calculated scaled vector is NOT an instance of `Gera.Vector3`.' );
+    
+            var uniformLocation = this.webglContext.shaderProgram.uniforms.lightingDirection;
+    
+            if ( !( uniformLocation instanceof WebGLUniformLocation ) )
+                throw new Error( 'Can\'t set the three-dimensional vector uniform variable in shader, which defines the value of the lighting direction, because the fetched uniform location is NOT an instance of `WebGLUniformLocation`.' );
+    
+            this.webglContext.uniform3f(
+                uniformLocation,
+                scaledVector.x,
+                scaledVector.y,
+                scaledVector.z
+            );
+        };
+    
+        var setDirectionalLightColorUniform = function( color ) {
+            if ( !( color instanceof Gera.Color ) )
+                throw new Error( 'Can\'t set the three-dimensional vector uniform variable in shader, which defines the value of directional light color, because the given color object is NOT an instance of `Gera.Color`.' );
+    
+            var uniformLocation = this.webglContext.shaderProgram.uniforms.directionalColor;
+    
+            if ( !( uniformLocation instanceof WebGLUniformLocation ) )
+                throw new Error( 'Can\'t set the three-dimensional vector uniform variable in shader, which defines the value of directional light color, because the fetched uniform location is NOT an instance of `WebGLUniformLocation`.' );
+    
+            this.webglContext.uniform3f(
+                uniformLocation,
+                color.glFloat.red,
+                color.glFloat.green,
+                color.glFloat.blue
+            );
         };
     
         var handleMeshTransparency = function( mesh ) {
@@ -4636,6 +5236,10 @@
                 texture: {
                     vertices: null,
                     indices: null
+                },
+                normals: {
+                    vertices: createMeshNormalBuffer.call( this, mesh ),
+                    indices: null
                 }
             });
         };
@@ -4653,6 +5257,10 @@
                 texture: {
                     vertices: createMeshTextureBuffer.call( this, mesh ),
                     indices: createMeshTextureIndexBuffer.call( this, mesh )
+                },
+                normals: {
+                    vertices: createMeshNormalBuffer.call( this, mesh ),
+                    indices: null
                 }
             });
         };
@@ -4772,6 +5380,36 @@
             }
     
             throw new Error( 'Can\'t create a new texture buffer for mesh, because the type of the binded texture object is NOT the `Gera.Texture.Type.Image`.' );
+        };
+    
+        var createMeshNormalBuffer = function( mesh ) {
+            if ( !( mesh instanceof Gera.Mesh ) )
+                throw new Error( 'Can\'t create a new normal buffer for mesh, because the input mesh object is NOT an instance of `Gera.Mesh`.' );
+    
+            if ( typeof Float32Array !== 'function' )
+                throw new Error( 'Can\'t create a new normal buffer for mesh. Seems to be, that your browser doesn\'t support the typed arrays. Required `Float32Array` type is NOT supported in your browser.' );
+    
+            var webglBuffer = this.webglContext.createBuffer();
+    
+            this.webglContext.bindBuffer(
+                this.webglContext.ARRAY_BUFFER,
+                webglBuffer
+            );
+    
+            this.webglContext.bufferData(
+                this.webglContext.ARRAY_BUFFER,
+                mesh.geometry.normals.typed,
+                this.webglContext.DYNAMIC_DRAW
+            );
+    
+            var itemSize = Object.keys( new Gera.Vector3 ).length;
+    
+            webglBuffer.info = new Gera.Buffer.RenderingInfo({
+                size: itemSize,
+                count: mesh.geometry.normals.typed.length / itemSize
+            });
+    
+            return webglBuffer;
         };
     
         var createMeshIndexBuffer = function( mesh ) {
