@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: math.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: math.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>( function( Gera ) {
+
+    /**
+     * Static object which provides mathematica operations,
+     * which are used by the different Gera internal modules
+     * and also can be used by the end-developers for other aims
+     *
+     * @module Gera/Math
+     */
+
+    /**
+     * @constructor
+     * @exception { Error } - Throws an exception when the end-developer is trying to create an instance of the `Gera.Math` prototype
+     */
+    Gera.Math = function() {
+        throw new Error( 'You\'re trying to create an instance of abstract `Gera.Math` prototype.' );
+    };
+
+    /**
+     * @kind function
+     * @param { number } degrees - Input value in degrees which will be converted to the radians value 
+     * @returns { number } - The converted value in radians
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is different from the number type
+     */
+    Gera.Math.convertDegreesToRadians = function( degrees ) {
+        if ( typeof degrees !== 'number' )
+            throw new Error( 'Can\'t convert degrees to radians, because the input value is NOT a type of `number`.' );
+
+        return degrees * Math.PI / 180;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Bounds.Perspective } bounds - Input perspective bounds which will be used as the limit for the camera frustum
+     * @returns { Gera.Matrix.Frustum } - The frustum settings for the perspective projection
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Bounds.Perspective`
+     */
+    Gera.Math.createPerspectiveProjection = function( bounds ) {
+        if ( !( bounds instanceof Gera.Bounds.Perspective ) )
+            throw new Error( 'Can\'t create the perspective projection on given bounds, because it\'s NOT an instance of `Gera.Bounds.Perspective`.' );
+
+        var top = bounds.near * Math.tan( bounds.fieldOfView * Math.PI / 360 );
+        var right = top * bounds.aspect;
+
+        return Gera.Matrix.Frustum(
+            new Gera.Bounds.Orthographic({
+                left: -right,
+                right: right,
+                top: top,
+                bottom: -top,
+                near: bounds.near,
+                far: bounds.far
+            })
+        );
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Bounds.Orthographic } bounds - Input orthographic bounds which will be used as the limit for the camera frustum
+     * @returns { Float32Array } - The calculated orthographic projection which values are stored as the matrix
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Bounds.Orthographic`
+     */
+    Gera.Math.createOrthographicProjection = function( bounds ) {
+        if ( !( bounds instanceof Gera.Bounds.Orthographic ) )
+            throw new Error( 'Can\'t create the orthographic projection on given bounds, because it\'s NOT an instance of `Gera.Bounds.Orthographic`.' );
+
+        var matrix = new Gera.Matrix.Empty();
+        var rightLeft = ( bounds.right - bounds.left );
+        var topBottom = ( bounds.top - bounds.bottom );
+        var farNear = ( bounds.far - bounds.near );
+
+        for ( var i = 0; i &lt; matrix.length; i++ ) {
+            matrix[ i ] = 2 / rightLeft;
+            matrix[ i ] = 0;
+            matrix[ i ] = 0;
+            matrix[ i ] = 0;
+            matrix[ i ] = 0;
+            matrix[ i ] = 2 / topBottom;
+            matrix[ i ] = 0;
+            matrix[ i ] = 0;
+            matrix[ i ] = 0;
+            matrix[ i ] = 0;
+            matrix[ i ] = -2 / farNear;
+            matrix[ i ] = 0;
+            matrix[ i ] = -( left + right ) / rightLeft;
+            matrix[ i ] = -( top + bottom ) / topBottom;
+            matrix[ i ] = -( far + near ) / farNear;
+            matrix[ i ] = 1;
+        }
+
+        return matrix;
+    };
+
+    /**
+     * @kind function
+     * @param { Float32Array } matrix - Input matrix array which will be translated by the given vector
+     * @param { Gera.Vector3 } vector - Input vector which will be used for the translation process of the given matrix
+     * @returns { Float32Array } - The translated matrix
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass NOT an instance of `Float32Array` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass NOT an instance of `Gera.Vector3` for the 2nd argument
+     */
+    Gera.Math.translateMatrixByVector = function( matrix, vector ) {
+        if ( !( matrix instanceof Float32Array ) )
+            throw new Error( 'Can\'t translate the input matrix by the input vector, because the input matrix is not an instance of `Float32Array`.' );
+
+        if ( !( vector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t translate the input matrix by the input vector, because the input vector is not an instance of `Gera.Vector3`.' );
+
+        matrix[ 12 ] =
+            matrix[ 0  ] * vector.x +
+            matrix[ 4  ] * vector.y +
+            matrix[ 8  ] * vector.z +
+            matrix[ 12 ];
+
+        matrix[ 13 ] =
+            matrix[ 1  ] * vector.x +
+            matrix[ 5  ] * vector.y +
+            matrix[ 9  ] * vector.z +
+            matrix[ 13 ];
+
+        matrix[ 14 ] =
+            matrix[ 2  ] * vector.x +
+            matrix[ 6  ] * vector.y +
+            matrix[ 10 ] * vector.z +
+            matrix[ 14 ];
+
+        matrix[ 15 ] =
+            matrix[ 3  ] * vector.x +
+            matrix[ 7  ] * vector.y +
+            matrix[ 11 ] * vector.z +
+            matrix[ 15 ];
+
+        return matrix;
+    };
+
+    /**
+     * @kind function
+     * @param { Float32Array } firstMatrix - Input first matrix which will be used for the matrix multiplication process
+     * @param { Float32Array } secondMatrix - Input second matrix which will be used for the matrix multiplication process
+     * @returns { Float32Array } - The product of the multiplication process between two matrices
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass NOT an instance of `Float32Array` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass NOT an instance of `Float32Array` for the 2nd argument
+     */
+    Gera.Math.multiplyMatrices = function( firstMatrix, secondMatrix ) {
+        if ( !( firstMatrix instanceof Float32Array ) )
+            throw new Error( 'Can\'t multiply the two matrices between each other, because the first matrix is NOT an instance of `Float32Array`.' );
+
+        if ( !( secondMatrix instanceof Float32Array ) )
+            throw new Error( 'Can\'t multiply the two matrices between each other, because the second matrix is NOT an instance of `Float32Array`.' );
+
+        var resultMatrix = new Gera.Matrix.Empty();
+
+        resultMatrix[ 0 ] =
+            firstMatrix[ 0  ] * secondMatrix[ 0 ] +
+            firstMatrix[ 4  ] * secondMatrix[ 1 ] +
+            firstMatrix[ 8  ] * secondMatrix[ 2 ] +
+            firstMatrix[ 12 ] * secondMatrix[ 3 ];
+
+        resultMatrix[ 1 ] =
+            firstMatrix[ 1  ] * secondMatrix[ 0 ] +
+            firstMatrix[ 5  ] * secondMatrix[ 1 ] +
+            firstMatrix[ 9  ] * secondMatrix[ 2 ] +
+            firstMatrix[ 13 ] * secondMatrix[ 3 ];
+
+        resultMatrix[ 2 ] =
+            firstMatrix[ 2  ] * secondMatrix[ 0 ] +
+            firstMatrix[ 6  ] * secondMatrix[ 1 ] +
+            firstMatrix[ 10 ] * secondMatrix[ 2 ] +
+            firstMatrix[ 14 ] * secondMatrix[ 3 ];
+
+        resultMatrix[ 3 ] =
+            firstMatrix[ 3  ] * secondMatrix[ 0 ] +
+            firstMatrix[ 7  ] * secondMatrix[ 1 ] +
+            firstMatrix[ 11 ] * secondMatrix[ 2 ] +
+            firstMatrix[ 15 ] * secondMatrix[ 3 ];
+
+        resultMatrix[ 4 ] =
+            firstMatrix[ 0  ] * secondMatrix[ 4 ] +
+            firstMatrix[ 4  ] * secondMatrix[ 5 ] +
+            firstMatrix[ 8  ] * secondMatrix[ 6 ] +
+            firstMatrix[ 12 ] * secondMatrix[ 7 ];
+
+        resultMatrix[ 5 ] =
+            firstMatrix[ 1  ] * secondMatrix[ 4 ] +
+            firstMatrix[ 5  ] * secondMatrix[ 5 ] +
+            firstMatrix[ 9  ] * secondMatrix[ 6 ] +
+            firstMatrix[ 13 ] * secondMatrix[ 7 ];
+
+        resultMatrix[ 6 ] =
+            firstMatrix[ 2  ] * secondMatrix[ 4 ] +
+            firstMatrix[ 6  ] * secondMatrix[ 5 ] +
+            firstMatrix[ 10 ] * secondMatrix[ 6 ] +
+            firstMatrix[ 14 ] * secondMatrix[ 7 ];
+
+        resultMatrix[ 7 ] =
+            firstMatrix[ 3  ] * secondMatrix[ 4 ] +
+            firstMatrix[ 7  ] * secondMatrix[ 5 ] +
+            firstMatrix[ 11 ] * secondMatrix[ 6 ] +
+            firstMatrix[ 15 ] * secondMatrix[ 7 ];
+
+        resultMatrix[ 8 ] =
+            firstMatrix[ 0  ] * secondMatrix[ 8  ] +
+            firstMatrix[ 4  ] * secondMatrix[ 9  ] +
+            firstMatrix[ 8  ] * secondMatrix[ 10 ] +
+            firstMatrix[ 12 ] * secondMatrix[ 11 ];
+
+        resultMatrix[ 9 ] =
+            firstMatrix[ 1  ] * secondMatrix[ 8  ] +
+            firstMatrix[ 5  ] * secondMatrix[ 9  ] +
+            firstMatrix[ 9  ] * secondMatrix[ 10 ] +
+            firstMatrix[ 13 ] * secondMatrix[ 11 ];
+
+        resultMatrix[ 10 ] =
+            firstMatrix[ 2  ] * secondMatrix[ 8  ] +
+            firstMatrix[ 6  ] * secondMatrix[ 9  ] +
+            firstMatrix[ 10 ] * secondMatrix[ 10 ] +
+            firstMatrix[ 14 ] * secondMatrix[ 11 ];
+
+        resultMatrix[ 11 ] =
+            firstMatrix[ 3  ] * secondMatrix[ 8  ] +
+            firstMatrix[ 7  ] * secondMatrix[ 9  ] +
+            firstMatrix[ 11 ] * secondMatrix[ 10 ] +
+            firstMatrix[ 15 ] * secondMatrix[ 11 ];
+
+        resultMatrix[ 12 ] =
+            firstMatrix[ 0  ] * secondMatrix[ 12 ] +
+            firstMatrix[ 4  ] * secondMatrix[ 13 ] +
+            firstMatrix[ 8  ] * secondMatrix[ 14 ] +
+            firstMatrix[ 12 ] * secondMatrix[ 15 ];
+
+        resultMatrix[ 13 ] =
+            firstMatrix[ 1  ] * secondMatrix[ 12 ] +
+            firstMatrix[ 5  ] * secondMatrix[ 13 ] +
+            firstMatrix[ 9  ] * secondMatrix[ 14 ] +
+            firstMatrix[ 13 ] * secondMatrix[ 15 ];
+
+        resultMatrix[ 14 ] =
+            firstMatrix[ 2  ] * secondMatrix[ 12 ] +
+            firstMatrix[ 6  ] * secondMatrix[ 13 ] +
+            firstMatrix[ 10 ] * secondMatrix[ 14 ] +
+            firstMatrix[ 14 ] * secondMatrix[ 15 ];
+
+        resultMatrix[ 15 ] =
+            firstMatrix[ 3  ] * secondMatrix[ 12 ] +
+            firstMatrix[ 7  ] * secondMatrix[ 13 ] +
+            firstMatrix[ 11 ] * secondMatrix[ 14 ] +
+            firstMatrix[ 15 ] * secondMatrix[ 15 ];
+
+        return resultMatrix;
+    };
+
+    /**
+     * @kind function
+     * @param { Float32Array } matrix - Input matrix, size of 4x4 which will be inversed to the matrix, size of 3x3
+     * @returns { Float32Array } - The inversed matrix, size of 3x3
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Float32Array`
+     */
+    Gera.Math.inverseThreeDimensionalMatrixFromFour = function( matrix ) {
+        if ( !( matrix instanceof Float32Array ) )
+            throw new Error( 'Can\'t inverse the three-dimensional matrix, because the given matrix object is NOT an instance of `Float32Array`.' );
+
+        var coefficientA =
+             matrix[ 10 ] * matrix[ 5 ] -
+             matrix[ 6  ] * matrix[ 9 ];
+
+        var coefficientB =
+            -matrix[ 10 ] * matrix[ 4 ] +
+             matrix[ 6  ] * matrix[ 8 ];
+
+        var coefficientC =
+             matrix[ 9 ] * matrix[ 4 ] -
+             matrix[ 5 ] * matrix[ 8 ];
+
+        var determinant =
+             matrix[ 0 ] * coefficientA +
+             matrix[ 1 ] * coefficientB +
+             matrix[ 2 ] * coefficientC;
+
+        var inversedDeterminant =  1 / determinant;
+        var resultMatrix = new Gera.Matrix3();
+
+        resultMatrix[ 0 ] = coefficientA * inversedDeterminant;
+
+        resultMatrix[ 1 ] =
+            ( -matrix[ 10 ] * matrix[ 1 ] +
+               matrix[ 2  ] * matrix[ 9 ] ) * inversedDeterminant;
+
+        resultMatrix[ 2 ] =
+            ( matrix[ 6 ] * matrix[ 1 ] -
+              matrix[ 2 ] * matrix[ 5 ] ) * inversedDeterminant;
+
+        resultMatrix[ 3 ] = coefficientB * inversedDeterminant;
+
+        resultMatrix[ 4 ] =
+            ( matrix[ 10 ] * matrix[ 0 ] -
+              matrix[ 2  ] * matrix[ 8 ] ) * inversedDeterminant;
+
+        resultMatrix[ 5 ] =
+            ( -matrix[ 6 ] * matrix[ 0 ] +
+               matrix[ 2 ] * matrix[ 4 ] ) * inversedDeterminant;
+
+        resultMatrix[ 6 ] = coefficientC * inversedDeterminant;
+
+        resultMatrix[ 7 ] =
+            ( -matrix[ 9 ] * matrix[ 0 ] +
+               matrix[ 1 ] * matrix[ 8 ] ) * inversedDeterminant;
+
+        resultMatrix[ 8 ] =
+            ( matrix[ 5 ] * matrix[ 0 ] -
+              matrix[ 1 ] * matrix[ 4 ] ) * inversedDeterminant;
+
+        return resultMatrix;
+    };
+
+    /**
+     * @kind function
+     * @param { Float32Array } matrix - Input matrix, size of 3x3 which will be used for the transposing
+     * @returns { Float32Array } - The transposed matrix, size of 3x3
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Float32Array`
+     */
+    Gera.Math.transposeThreeDimensionalMatrix = function( matrix ) {
+        if ( !( matrix instanceof Float32Array ) )
+            throw new Error( 'Can\'t transpose the three-dimensional matrix, because the given matrix object is NOT an instance of `Float32Array`.' );
+
+        var valueA = matrix[ 1 ];
+        var valueB = matrix[ 2 ];
+        var valueC = matrix[ 5 ];
+
+        matrix[ 1 ] = matrix[ 3 ];
+        matrix[ 2 ] = matrix[ 6 ];
+        matrix[ 3 ] = valueA;
+        matrix[ 5 ] = matrix[ 7 ];
+        matrix[ 6 ] = valueB;
+        matrix[ 7 ] = valueC;
+
+        return matrix;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } vector - Input two-dimensional vector which length will be calculated
+     * @returns { number } - The length of the two-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2`
+     */
+    Gera.Math.calculateTwoDimensionalVectorLength = function( vector ) {
+        if ( !( vector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t calculate the length of the given two-dimensional vector, because it\'s NOT an instance of `Gera.Vector2`.' );
+
+        return Math.sqrt(
+            Math.pow( vector.x, 2 ) +
+            Math.pow( vector.y, 2 )
+        );
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } vector - Input three-dimensional vector which length will be calculated
+     * @returns { number } - The length of the three-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3`
+     */
+    Gera.Math.calculateThreeDimensionalVectorLength = function( vector ) {
+        if ( !( vector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t calculate the length of the given three-dimensional vector, because it\'s NOT an instance of `Gera.Vector3`.' );
+
+        return Math.sqrt(
+            Math.pow( vector.x, 2 ) +
+            Math.pow( vector.y, 2 ) +
+            Math.pow( vector.z, 2 )
+        );
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } vector - Input four-dimensional vector which length will be calculated
+     * @returns { number } - The length of the four-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4`
+     */
+    Gera.Math.calculateFourDimensionalVectorLength = function( vector ) {
+        if ( !( vector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t calculate the length of the given four-dimensional vector, because it\'s NOT an instance of `Gera.Vector4`.' );
+
+        return Math.sqrt(
+            Math.pow( vector.x, 2 ) +
+            Math.pow( vector.y, 2 ) +
+            Math.pow( vector.z, 2 ) +
+            Math.pow( vector.w, 2 )
+        );
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } vector - Input two-dimensional vector which will be normalized
+     * @returns { Gera.Vector2 } - The normalized two-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2`
+     */
+    Gera.Math.normalizeTwoDimensionalVector = function( vector ) {
+        if ( !( vector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t normalize the given two-dimensional vector, because it\'s NOT an instance of `Gera.Vector2`.' );
+
+        var length = Gera.Math.calculateTwoDimensionalVectorLength( vector );
+
+        if ( typeof length !== 'number' )
+            throw new Error( 'Can\'t normalize the given two-dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
+
+        if ( length === 0 )
+            return vector;
+
+        var factor = 1.0 / length;
+
+        return new Gera.Vector2({
+            x: vector.x * factor,
+            y: vector.y * factor
+        });    
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } vector - Input three-dimensional vector which will be normalized
+     * @returns { Gera.Vector3 } - The normalized two-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3`
+     */
+    Gera.Math.normalizeThreeDimensionalVector = function( vector ) {
+        if ( !( vector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t normalize the given three-dimensional vector, because it\'s NOT an instance of `Gera.Vector3`.' );
+
+        var length = Gera.Math.calculateThreeDimensionalVectorLength( vector );
+
+        if ( typeof length !== 'number' )
+            throw new Error( 'Can\'t normalize the given three-dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
+
+        if ( length === 0 )
+            return vector;
+
+        var factor = 1.0 / length;
+
+        return new Gera.Vector3({
+            x: vector.x * factor,
+            y: vector.y * factor,
+            z: vector.z * factor
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } vector - Input fou-dimensional vector which will be normalized
+     * @returns { Gera.Vector4 } - The normalized four-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4`
+     */
+    Gera.Math.normalizeFourDimensionalVector = function( vector ) {
+        if ( !( vector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t normalize the given four-dimensional vector, because it\'s NOT an instance of `Gera.Vector4`.' );
+
+        var length = Gera.Math.calculateFourDimensionalVectorLength( vector );
+
+        if ( typeof length !== 'number' )
+            throw new Error( 'Can\'t normalize the given four-dimensional vector, because the calculated length value of it is NOT a type of `number`.' );
+
+        if ( length === 0 )
+            return vector;
+
+        var factor = 1.0 / length;
+
+        return new Gera.Vector4({
+            x: vector.x * factor,
+            y: vector.y * factor,
+            z: vector.z * factor,
+            w: vector.w * factor
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } vector - Input two-dimensional vector which will be scaled
+     * @param { number } scalar - Input scalar value which will be used for the vector scaling
+     * @returns { Gera.Vector2 } - The scaled two-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT a type of `number` for the 2nd argument
+     */
+    Gera.Math.scaleTwoDimensionalVector = function( vector, scalar ) {
+        if ( !( vector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t scale the two-dimensional vector by the scalar value, because the given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        if ( typeof scalar !== 'number' )
+            throw new Error( 'Can\'t scale the two-dimensional vector by the scalar value, because the given scalar value is NOT a type of `number`.' );
+
+        var resultVector = new Gera.Vector2({
+            x: vector.x * scalar,
+            y: vector.y * scalar,
+        });
+
+        return resultVector;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } vector - Input three-dimensional vector which will be scaled
+     * @param { number } scalar - Input scalar value which will be used for the vector scaling
+     * @returns { Gera.Vector3 } - The scaled three-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT a type of `number` for the 2nd argument
+     */
+    Gera.Math.scaleThreeDimensionalVector = function( vector, scalar ) {
+        if ( !( vector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t scale the three-dimensional vector by the scalar value, because the given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        if ( typeof scalar !== 'number' )
+            throw new Error( 'Can\'t scale the three-dimensional vector by the scalar value, because the given scalar value is NOT a type of `number`.' );
+
+        var resultVector = new Gera.Vector3({
+            x: vector.x * scalar,
+            y: vector.y * scalar,
+            z: vector.z * scalar
+        });
+
+        return resultVector;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } vector - Input four-dimensional vector which will be scaled
+     * @param { number } scalar - Input scalar value which will be used for the vector scaling
+     * @returns { Gera.Vector4 } - The scaled four-dimensional vector
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT a type of `number` for the 2nd argument
+     */
+    Gera.Math.scaleFourDimensionalVector = function( vector, scalar ) {
+        if ( !( vector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t scale the four-dimensional vector by the scalar value, because the given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        if ( typeof scalar !== 'number' )
+            throw new Error( 'Can\'t scale the four-dimensional vector by the scalar value, because the given scalar value is NOT a type of `number`.' );
+
+        var resultVector = new Gera.Vector4({
+            x: vector.x * scalar,
+            y: vector.y * scalar,
+            z: vector.z * scalar,
+            w: vector.w * scalar
+        });
+
+        return resultVector;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } firstVector - Input first vector which will be used for the addition process
+     * @param { Gera.Vector2 } secondVector - Input second vector which will be used for the addition process
+     * @returns { Gera.Vector2 } - The sum of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 2nd argument
+     */
+    Gera.Math.addTwoDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t process the addition of two vectors, because the first given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        if ( !( secondVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t process the addition of two vectors, because the second given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        return new Gera.Vector2({
+            x: firstVector.x + secondVector.x,
+            y: firstVector.y + secondVector.y
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } firstVector - Input first vector which will be used for the addition process
+     * @param { Gera.Vector3 } secondVector - Input second vector which will be used for the addition process
+     * @returns { Gera.Vector3 } - The sum of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 2nd argument
+     */
+    Gera.Math.addThreeDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t process the addition of two vectors, because the first given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        if ( !( secondVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t process the addition of two vectors, because the second given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        return new Gera.Vector3({
+            x: firstVector.x + secondVector.x,
+            y: firstVector.y + secondVector.y,
+            z: firstVector.z + secondVector.z
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } firstVector - Input first vector which will be used for the addition process
+     * @param { Gera.Vector4 } secondVector - Input second vector which will be used for the addition process
+     * @returns { Gera.Vector4 } - The sum of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 2nd argument
+     */
+    Gera.Math.addFourDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t process the addition of two vectors, because the first given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        if ( !( secondVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t process the addition of two vectors, because the second given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        return new Gera.Vector4({
+            x: firstVector.x + secondVector.x,
+            y: firstVector.y + secondVector.y,
+            z: firstVector.z + secondVector.z,
+            w: firstVector.w + secondVector.w
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } firstVector - Input first vector which will be used for the subtraction process
+     * @param { Gera.Vector2 } secondVector - Input second vector which will be used for the subtraction process
+     * @returns { Gera.Vector2 } - The difference of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 2nd argument
+     */
+    Gera.Math.subtractTwoDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t process the subtraction of two vectors, because the first given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        if ( !( secondVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t process the subtraction of two vectors, because the second given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        return new Gera.Vector2({
+            x: firstVector.x - secondVector.x,
+            y: firstVector.y - secondVector.y
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } firstVector - Input first vector which will be used for the subtraction process
+     * @param { Gera.Vector3 } secondVector - Input second vector which will be used for the subtraction process
+     * @returns { Gera.Vector3 } - The difference of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 2nd argument
+     */
+    Gera.Math.subtractThreeDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t process the subtraction of two vectors, because the first given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        if ( !( secondVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t process the subtraction of two vectors, because the second given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        return new Gera.Vector3({
+            x: firstVector.x - secondVector.x,
+            y: firstVector.y - secondVector.y,
+            z: firstVector.z - secondVector.z
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } firstVector - Input first vector which will be used for the subtraction process
+     * @param { Gera.Vector4 } secondVector - Input second vector which will be used for the subtraction process
+     * @returns { Gera.Vector4 } - The difference of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 2nd argument
+     */
+    Gera.Math.subtractFourDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t process the subtraction of two vectors, because the first given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        if ( !( secondVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t process the subtraction of two vectors, because the second given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        return new Gera.Vector4({
+            x: firstVector.x - secondVector.x,
+            y: firstVector.y - secondVector.y,
+            z: firstVector.z - secondVector.z,
+            w: firstVector.w - secondVector.w
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } firstVector - Input first vector which will be used for the multiplication process
+     * @param { Gera.Vector2 } secondVector - Input second vector which will be used for the multiplication process
+     * @returns { Gera.Vector2 } - The multiplication result of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 2nd argument
+     */
+    Gera.Math.multiplyTwoDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t process the multiplication of two vectors, because the first given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        if ( !( secondVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t process the multiplication of two vectors, because the second given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        return new Gera.Vector2({
+            x: firstVector.x * secondVector.x,
+            y: firstVector.y * secondVector.y
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } firstVector - Input first vector which will be used for the multiplication process
+     * @param { Gera.Vector3 } secondVector - Input second vector which will be used for the multiplication process
+     * @returns { Gera.Vector3 } - The multiplication result of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 2nd argument
+     */
+    Gera.Math.multiplyThreeDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t process the multiplication of two vectors, because the first given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        if ( !( secondVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t process the multiplication of two vectors, because the second given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        return new Gera.Vector3({
+            x: firstVector.x * secondVector.x,
+            y: firstVector.y * secondVector.y,
+            z: firstVector.z * secondVector.z
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } firstVector - Input first vector which will be used for the multiplication process
+     * @param { Gera.Vector4 } secondVector - Input second vector which will be used for the multiplication process
+     * @returns { Gera.Vector4 } - The multiplication result of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 2nd argument
+     */
+    Gera.Math.multiplyFourDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t process the multiplication of two vectors, because the first given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        if ( !( secondVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t process the multiplication of two vectors, because the second given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        return new Gera.Vector4({
+            x: firstVector.x * secondVector.x,
+            y: firstVector.y * secondVector.y,
+            z: firstVector.z * secondVector.z,
+            w: firstVector.w * secondVector.w
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } firstVector - Input first vector which will be used for the division process
+     * @param { Gera.Vector2 } secondVector - Input second vector which will be used for the division process
+     * @returns { Gera.Vector2 } - The division result of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 2nd argument
+     */
+    Gera.Math.divideTwoDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t process the division of two vectors, because the first given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        if ( !( secondVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t process the division of two vectors, because the second given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        return new Gera.Vector2({
+            x: firstVector.x / secondVector.x,
+            y: firstVector.y / secondVector.y
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } firstVector - Input first vector which will be used for the division process
+     * @param { Gera.Vector3 } secondVector - Input second vector which will be used for the division process
+     * @returns { Gera.Vector3 } - The division result of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 2nd argument
+     */
+    Gera.Math.divideThreeDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t process the division of two vectors, because the first given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        if ( !( secondVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t process the division of two vectors, because the second given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        return new Gera.Vector3({
+            x: firstVector.x / secondVector.x,
+            y: firstVector.y / secondVector.y,
+            z: firstVector.z / secondVector.z
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } firstVector - Input first vector which will be used for the division process
+     * @param { Gera.Vector4 } secondVector - Input second vector which will be used for the division process
+     * @returns { Gera.Vector4 } - The division result of vectors
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 2nd argument
+     */
+    Gera.Math.divideFourDimensionalVectors = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t process the division of two vectors, because the first given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        if ( !( secondVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t process the division of two vectors, because the second given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        return new Gera.Vector4({
+            x: firstVector.x / secondVector.x,
+            y: firstVector.y / secondVector.y,
+            z: firstVector.z / secondVector.z,
+            w: firstVector.w / secondVector.w
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } firstVector - Input first vector which will be used for the equality check
+     * @param { Gera.Vector2 } secondVector - Input second vector which will be used for the equality check
+     * @returns { boolean } - The result indicating are vectors equal or not
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 2nd argument
+     */
+    Gera.Math.checkTwoDimensionalVectorsEquality = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t check are given vectors equal, because the first given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        if ( !( secondVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t check are given vectors equal, because the second given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        for ( var item in firstVector ) {
+            if ( [ 'x', 'y' ].indexOf( item ) !== -1 ) {            
+                switch ( item ) {
+                    case 'x':
+                    case 'y':
+                        if ( firstVector[ item ] !== secondVector[ item ] )
+                            return false;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return true;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } firstVector - Input first vector which will be used for the equality check
+     * @param { Gera.Vector3 } secondVector - Input second vector which will be used for the equality check
+     * @returns { boolean } - The result indicating are vectors equal or not
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 2nd argument
+     */
+    Gera.Math.checkThreeDimensionalVectorsEquality = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t check are given vectors equal, because the first given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        if ( !( secondVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t check are given vectors equal, because the second given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        for ( var item in firstVector ) {
+            if ( [ 'x', 'y', 'z' ].indexOf( item ) !== -1 ) {            
+                switch ( item ) {
+                    case 'x':
+                    case 'y':
+                    case 'z':
+                        if ( firstVector[ item ] !== secondVector[ item ] )
+                            return false;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return true;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } firstVector - Input first vector which will be used for the equality check
+     * @param { Gera.Vector4 } secondVector - Input second vector which will be used for the equality check
+     * @returns { boolean } - The result indicating are vectors equal or not
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 2nd argument
+     */
+    Gera.Math.checkFourDimensionalVectorsEquality = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t check are given vectors equal, because the first given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        if ( !( secondVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t check are given vectors equal, because the second given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        for ( var item in firstVector ) {
+            if ( [ 'x', 'y', 'z', 'w' ].indexOf( item ) !== -1 ) {            
+                switch ( item ) {
+                    case 'x':
+                    case 'y':
+                    case 'z':
+                    case 'w':
+                        if ( firstVector[ item ] !== secondVector[ item ] )
+                            return false;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return true;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } firstVector - Input first vector which will be used for the dot product calculation
+     * @param { Gera.Vector2 } secondVector - Input second vector which will be used for the dot product calculation
+     * @returns { number } - The result of vectors dot product
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 2nd argument
+     */
+    Gera.Math.calculateTwoDimensionalDotProduct = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t calculate the dot product of two vectors, because the first given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        if ( !( secondVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t calculate the dot product of two vectors, because the second given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        return firstVector.x * secondMatrix.x +
+               firstVector.y * secondMatrix.y;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } firstVector - Input first vector which will be used for the dot product calculation
+     * @param { Gera.Vector3 } secondVector - Input second vector which will be used for the dot product calculation
+     * @returns { number } - The result of vectors dot product
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 2nd argument
+     */
+    Gera.Math.calculateThreeDimensionalDotProduct = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t calculate the dot product of two vectors, because the first given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        if ( !( secondVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t calculate the dot product of two vectors, because the second given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        return firstVector.x * secondMatrix.x +
+               firstVector.y * secondMatrix.y +
+               firstVector.z * secondMatrix.z;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector4 } firstVector - Input first vector which will be used for the dot product calculation
+     * @param { Gera.Vector4 } secondVector - Input second vector which will be used for the dot product calculation
+     * @returns { number } - The result of vectors dot product
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector4` for the 2nd argument
+     */
+    Gera.Math.calculateFourDimensionalDotProduct = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t calculate the dot product of two vectors, because the first given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        if ( !( secondVector instanceof Gera.Vector4 ) )
+            throw new Error( 'Can\'t calculate the dot product of two vectors, because the second given vector object is NOT an instance of `Gera.Vector4`.' );
+
+        return firstVector.x * secondMatrix.x +
+               firstVector.y * secondMatrix.y +
+               firstVector.z * secondMatrix.z +
+               firstVector.w * secondVector.w;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector2 } firstVector - Input first vector which will be used for the cross product calculation
+     * @param { Gera.Vector2 } secondVector - Input second vector which will be used for the cross product calculation
+     * @returns { number } - The result of vectors cross product
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector2` for the 2nd argument
+     */
+    Gera.Math.calculateTwoDimensionalCrossProduct = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t calculate the cross product of two vectors, because the first given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        if ( !( secondVector instanceof Gera.Vector2 ) )
+            throw new Error( 'Can\'t calculate the cross product of two vectors, because the second given vector object is NOT an instance of `Gera.Vector2`.' );
+
+        return firstVector.x * secondVector.y - firstVector.y * secondVector.x;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } firstVector - Input first vector which will be used for the cross product calculation
+     * @param { Gera.Vector3 } secondVector - Input second vector which will be used for the cross product calculation
+     * @returns { number } - The result of vectors cross product
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 2nd argument
+     */
+    Gera.Math.calculateThreeDimensionalCrossProduct = function( firstVector, secondVector ) {
+        if ( !( firstVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t calculate the cross product of two vectors, because the first given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        if ( !( secondVector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t calculate the cross product of two vectors, because the second given vector object is NOT an instance of `Gera.Vector3`.' );
+
+        return new Gera.Vector3({
+            x: firstVector.y * secondVector.z - firstVector.z * secondVector.y,
+            y: firstVector.z * secondVector.x - firstVector.x * secondVector.z,
+            z: firstVector.x * secondVector.y - firstVector.y * secondVector.x
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Quaternion } quaternion - Input quaternion which will be converted to matrix
+     * @returns { Float32Array } - The result matrix after conversion process
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Quaternion`
+     */
+    Gera.Math.convertQuaternionToMatrix = function( quaternion ) {
+        if ( !( quaternion instanceof Gera.Quaternion ) )
+            throw new Error( 'Can\'t convert the given quaternion object to its matrix 4x4 representation, because it\'s NOT an instance of `Gera.Quaternion`.' );
+
+        var matrix = new Gera.Matrix.Empty();
+
+        for ( var i = 0; i &lt; matrix.length; i++ ) {
+            switch ( i ) {
+                case 0:
+                    matrix[ i ] = 1 - ( quaternion.y * ( quaternion.y + quaternion.y ) + quaternion.z * ( quaternion.z + quaternion.z ) );
+                    break;
+                case 1:
+                    matrix[ i ] = quaternion.x * ( quaternion.y + quaternion.y ) + quaternion.w * ( quaternion.z + quaternion.z );
+                    break;
+                case 2:
+                    matrix[ i ] = quaternion.x * ( quaternion.z + quaternion.z ) - quaternion.w * ( quaternion.y + quaternion.y );
+                    break;
+                case 4:
+                    matrix[ i ] = quaternion.x * ( quaternion.y + quaternion.y ) - quaternion.w * ( quaternion.z + quaternion.z );
+                    break;
+                case 5:
+                    matrix[ i ] = 1 - ( quaternion.x * ( quaternion.x + quaternion.x ) + quaternion.z * ( quaternion.z + quaternion.z ) );
+                    break;
+                case 6:
+                    matrix[ i ] = quaternion.y * ( quaternion.z + quaternion.z ) + quaternion.w * ( quaternion.x + quaternion.x );
+                    break;
+                case 8:
+                    matrix[ i ] = quaternion.x * ( quaternion.z + quaternion.z ) + quaternion.w * ( quaternion.y + quaternion.y );
+                    break;
+                case 9:
+                    matrix[ i ] = quaternion.y * ( quaternion.z + quaternion.z ) - quaternion.w * ( quaternion.x + quaternion.x );
+                    break;
+                case 10:
+                    matrix[ i ] = 1 - ( quaternion.x * ( quaternion.x + quaternion.x ) + quaternion.y * ( quaternion.y + quaternion.y ) );
+                    break;
+                case 3:
+                case 7:
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                    matrix[ i ] = 0;
+                    break;
+                case 15:
+                    matrix[ i ] = 1;
+                    break;
+                default:
+                    throw new Error( 'Can\'t convert the given quaternion object to its matrix 4x4 representation, because it seems to be, that the size of the generated matrix wouldn\'t be the 4x4.' );
+            }
+        }
+
+        return matrix;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Quaternion } quaternion - Input quaternion which will be converted to Euler angles
+     * @returns { Gera.Vector3 } - The result matrix after conversion process
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Quaternion`
+     */
+    Gera.Math.convertQuaternionToEulerAngles = function( quaternion ) {
+        if ( !( quaternion instanceof Gera.Quaternion ) )
+            throw new Error( 'Can\'t convert the quaternion object to the Euler angles ( `Gera.Vector3` object ), because the given object is NOT an instance of `Gera.Quaternion`.' );
+
+        var vector = new Gera.Vector3();
+        var weights = {
+            xy: quaternion.x * quaternion.y,
+            xz: quaternion.x * quaternion.z,
+            wx: quaternion.w * quaternion.x,
+            wy: quaternion.w * quaternion.y,
+            wz: quaternion.w * quaternion.z,
+            yz: quaternion.y * quaternion.z
+        };
+
+        var determinant = Math.sqrt( quaternion.x ) + Math.sqrt( quaternion.y );
+
+        if ( determinant !== 0 &amp;&amp; determinant !== 1.0 ) {
+            vector.x = Math.atan2( weights.xz + weights.wy, weights.wx - weights.yz );
+            vector.y = Math.acos( 1 - 2 * determinant );
+            vector.z = Math.atan2( weights.xz - weights.wy, weights.wx + weights.yz );
+        }
+        else {
+            if ( determinant === 0 ) {
+                result.x = 0;
+                result.y = 0;
+                result.z = Math.atan2(
+                    weights.xy - weights.wz,
+                    0.5 - Math.sqrt( quaternion.y ) - Math.sqrt( quaternion.z )
+                );
+            }
+            else {
+                result.x = Math.atan2(
+                    weights.xy - weights.wz,
+                    0.5 - Math.sqrt( quaternion.y ) - Math.sqrt( quaternion.z )
+                );
+                result.y = Math.PI;
+                result.z = 0;
+            }
+        }
+
+        return vector;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Vector3 } vector - Input vector which will be used for representing orientation to quaternion
+     * @param { number } angle - Input angle which will used for representing orientation to quaternion
+     * @returns { Gera.Quaternion } - The quaternion which represents the orientation
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Vector3` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT a type of `number` for the 2nd argument
+     */
+    Gera.Math.convertRotationToQuaternion = function( vector, angle ) {
+        if ( !( vector instanceof Gera.Vector3 ) )
+            throw new Error( 'Can\'t represent the given rotation settings as the quaternion object, because the given vector is NOT an instance of `Gera.Vector3`.' );
+
+        if ( typeof angle !== 'number' )
+            throw new Error( 'Can\'t represent the given rotation settings as the quaternion object, because the given angle is NOT a type of `number`.' );
+
+        var angleInRadians = Gera.Math.convertDegreesToRadians( angle );
+        return new Gera.Quaternion({
+            x: vector.x * Math.sin( angleInRadians / 2 ),
+            y: vector.y * Math.sin( angleInRadians / 2 ),
+            z: vector.z * Math.sin( angleInRadians / 2 ),
+            w: Math.cos( angleInRadians / 2 )
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Quaternion } firstQuaternion - Input 1st quaternion which will be used for the quaternion multiplication
+     * @param { Gera.Quaternion } secondQuaternion - Input 2nd quaternion which will be used for the quaternion multiplication
+     * @returns { Gera.Quaternion } - The result quaternion
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Quaternion` for the 1st argument
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Quaternion` for the 2nd argument
+     */
+    Gera.Math.multiplyQuaternions = function( firstQuaternion, secondQuaternion ) {
+        if ( !( firstQuaternion instanceof Gera.Quaternion ) )
+            throw new Error( 'Can\'t multiply the two quaternions, because the first one is NOT an instance of `Gera.Quaternion`.' );
+
+        if ( !( secondQuaternion instanceof Gera.Quaternion ) )
+            throw new Error( 'Can\'t multiply the two quaternions, because the second one is NOT an instance of `Gera.Quaternion`.' );
+
+        var resultQuartenion = new Gera.Quaternion();
+
+        resultQuartenion.x =
+            firstQuaternion.w * secondQuaternion.x +
+            firstQuaternion.x * secondQuaternion.w +
+            firstQuaternion.y * secondQuaternion.z -
+            firstQuaternion.z * secondQuaternion.y;
+
+        resultQuartenion.y =
+            firstQuaternion.w * secondQuaternion.y -
+            firstQuaternion.x * secondQuaternion.z +
+            firstQuaternion.y * secondQuaternion.w +
+            firstQuaternion.z * secondQuaternion.x;
+
+        resultQuartenion.z =
+            firstQuaternion.w * secondQuaternion.z +
+            firstQuaternion.x * secondQuaternion.y -
+            firstQuaternion.y * secondQuaternion.x +
+            firstQuaternion.z * secondQuaternion.w;
+
+        resultQuartenion.w =
+            firstQuaternion.w * secondQuaternion.w -
+            firstQuaternion.x * secondQuaternion.x -
+            firstQuaternion.y * secondQuaternion.y -
+            firstQuaternion.z * secondQuaternion.z;
+
+        return resultQuartenion;
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Quaternion } quaternion - Input quaternion which length will be calculated
+     * @returns { number } - The length of the quaternion
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Quaternion`
+     */
+    Gera.Math.calculateQuaternionLength = function( quaternion ) {
+        if ( !( quaternion instanceof Gera.Quaternion ) )
+            throw new Error( 'Can\'t calculate the length of the given quaternion, because it\'s NOT an instance of `Gera.Quaternion`.' );
+
+        return Math.sqrt(
+            Math.pow( quaternion.x, 2 ) +
+            Math.pow( quaternion.y, 2 ) +
+            Math.pow( quaternion.z, 2 ) +
+            Math.pow( quaternion.w, 2 )
+        );
+    };
+
+    /**
+     * @kind function
+     * @param { Gera.Quaternion } quaternion - Input quaternion which will be normalized
+     * @returns { number } - The length of the quaternion
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT an instance of `Gera.Quaternion`
+     */
+    Gera.Math.normalizeQuaternion = function( quaternion ) {
+        if ( !( quaternion instanceof Gera.Quaternion ) )
+            throw new Error( 'Can\'t normalize the given quaternion object, because it\'s NOT an instance of `Gera.Quaternion`.' );
+
+        var length = Gera.Math.calculateQuaternionLength( quaternion );
+
+        if ( typeof length !== 'number' )
+            throw new Error( 'Can\'t normalize the given quaternion object, because the calculated length value of it is NOT a type of `number`.' );
+
+        if ( length === 0 )
+            return new Gera.Quaternion();
+
+        var factor = 1.0 / length;
+
+        return new Gera.Quaternion({
+            x: quaternion.x * factor,
+            y: quaternion.y * factor,
+            z: quaternion.z * factor,
+            w: quaternion.w * factor
+        });
+    };
+
+    /**
+     * @kind function
+     * @param { number } value - Input integer which will be checked to be power of 2
+     * @returns { boolean } - The result if the given integer is power of 2 or not
+     *
+     * @exception { Error } - Throws an exception when the end-developer is trying to pass an object which is NOT a type of `number`
+     */
+    Gera.Math.checkIsIntegerPowerOf2 = function( value ) {
+        if ( typeof value !== 'number' ) 
+            throw new Error( 'Can\'t check if the given integer is a power of 2, because it\'s NOT a type of `number`.' );
+
+        return ( value &amp; ( value - 1 ) ) === 0;
+    };
+
+})( libraryObject );</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Gera_Math.html">Gera/Math</a></li></ul><h3>Classes</h3><ul><li><a href="module-Gera_Math-Gera.Math.html">Math</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Wed Jul 29 2015 11:35:53 GMT+0300 (RTZ 2 (зима))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
