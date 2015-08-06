@@ -41,7 +41,7 @@ window.onload = function( sender ) {
            material: new Gera.Material(
                new Gera.Texture({
                    type: Gera.Texture.Type.Video,
-                   path: 'data/textures/firefox.ogv'
+                   path: 'data/textures/aguilera.mp4'
                })
            )
         });
